@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>룰렛 앱 - 컴공 26학번</title>
+    <style>
+        /* 안드로이드 앱 테마 색상 적용 */
+        :root {
+            --bg-color: #E2E2E2;
+            --primary-color: #C74F4E;
+            --exit-color: #A9A9A9;
+            --text-white: #FFFFFF;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            background-color: var(--bg-color);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* 전체 컨테이너 (모바일 앱 비율) */
+        .app-container {
+            width: 100%;
+            max-width: 500px;
+            height: 100%;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+            align-items: center;
+        }
+
+        /* 카드 (텍스트 표시 영역) */
+        .display-card {
+            width: 100%;
+            min-height: 250px;
+            background-color: var(--primary-color);
+            border-radius: 24px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: var(--text-white);
+            font-size: 1.6rem;
+            font-weight: bold;
+            line-height: 1.4;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* 공통 버튼 스타일 */
+        .btn {
+            width: 100%;
+            border: none;
+            border-radius: 16px;
+            background-color: var(--primary-color);
+            color: var(--text-white);
+            font-size: 1.4rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.1s;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+            filter: brightness(0.9);
+        }
+
+        /* 메뉴 버튼 (메인 화면용) */
+        .menu-list {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .menu-btn {
+            height: 70px;
+        }
+
+        /* 룰렛 실행 버튼 */
+        .action-btn {
+            height: 150px; /* weight(1f) 느낌 */
+            border-radius: 24px;
+        }
+
+        /* 하단 버튼 행 */
+        .bottom-row {
+            width: 100%;
+            display: flex;
+            gap: 16px;
+        }
+
+        .half-btn {
+            flex: 1;
+            height: 65px;
+            font-size: 1.1rem;
+            border-radius: 24px;
+        }
+
+        /* 앱 종료 버튼 (회색) */
+        .exit-btn {
+            width: 60%;
+            height: 60px;
+            background-color: #555555;
+            border-radius: 50px;
+            font-size: 1.1rem;
+        }
+
+        /* 화면 전환 처리 */
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            justify-content: space-evenly;
+            align-items: center;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <div id="main-screen" class="screen active">
+        <div class="display-card" style="min-height: 150px;">
+            룰렛을<br>선택해주세요!
+        </div>
+        <div class="menu-list">
+            <button class="btn menu-btn" onclick="showScreen('roulette-1')">1. 벌칙 룰렛</button>
+            <button class="btn menu-btn" onclick="showScreen('roulette-2')">2. 룰렛 룰렛</button>
+            <button class="btn menu-btn" onclick="showScreen('roulette-3')">3. 단어 룰렛</button>
+            <button class="btn menu-btn" onclick="showScreen('roulette-4')">4. 잰말 룰렛</button>
+        </div>
+        <button class="btn exit-btn" onclick="appExit()">앱 종료</button>
+    </div>
+
+    <div id="roulette-screen" class="screen">
+        <div id="roulette-display" class="display-card">
+            화면을 눌러<br>정하세요!
+        </div>
+        <button id="draw-btn" class="btn action-btn" onclick="drawItem()">뽑기</button>
+        <div class="bottom-row">
+            <button class="btn half-btn" onclick="showScreen('main')">메인으로</button>
+            <button class="btn half-btn" onclick="appExit()">EXIT</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // 각 룰렛 데이터
+    const data = {
+        'roulette-1': {
+            title: "벌칙 뽑기",
+            defaultMsg: "화면을 눌러<br>벌칙을 정하세요!",
+            items: [
+                "거리 0.75배", "거리 1.5배", "거리 2배", "비(非)-우세손 발사", "양손 엄지 사용 금지",
+                "양손 엄지, 검지 사용 금지", "극악의 점수 계산", "홀수 점수 무효", "짝수 점수 무효",
+                "홀수 점수면 +1점", "짝수 점수면 +1점", "획득 점수 +1점", "예언가", "코끼리코 제자리 회전 5회",
+                "코끼리코 제자리 회전 10회", "한 발 들고 쏘기(무릎까진 들기)", "앉아 쏘기",
+                "제자리에서 회전하다가 쏘기\n(두 바퀴 이후 계속 돌면서)", "엎드려 쏘기", "(줄넘기 뛰듯)점프하며 쏘기",
+                "뒤돌아 쏘기", "스쿼트 자세 유지하며 쏘기", "손 등위에 동전 올리고 쏘기", "일심이체",
+                "활에 있는 보조 구멍 쓰지 않고 쏘기", "한번에 모두 쏘기", "대리권", "ADHD",
+                "양손 엄지 검지만 사용", "화살 잡는 손 관절 굽히지 않기(손목 포함)"
+            ]
+        },
+        'roulette-2': {
+            title: "룰렛 뽑기",
+            defaultMsg: "화면을 눌러<br>룰렛을 정하세요!",
+            items: [
+                "벌칙 면제권(양도 가능)\n- 개인 한정 -", "이것도 먹어보시게\n- 아무나 -", "어명 하사\n(전원 1잔 혹은 지목 1인 1잔)",
+                "기미상궁 고용권\n- 리버스 흑기사 -", "바가지 적립", "주사위 한 번 더", "꽝(한 잔)", "섹시 웨이브",
+                "26(학번) 마셔", "26 빼고 다 마셔", "SNS 사진 올리기\n- 인스타 스토리 -", "옵션 해제", "옵션 해제",
+                "주막 이동", "사약 한 사발\n(종이컵)", "과거시험\n- 랜덤 N행시 -", "종이컵 한 잔",
+                "전화번호 7번째 수만큼\n의리주 마시기", "배터리 퍼센트가\n가장 낮은 사람 당첨", "카톡 안읽은 숫자\n많은 사람 당첨",
+                "카톡 안읽은 숫자\n적은 사람 당첨", "사회자 마셔(25%)", "사회자 마셔(50%)", "사회자 마셔(풀잔)",
+                "사회자 마셔\n(사랑하는 만큼)"
+            ]
+        },
+        'roulette-3': {
+            title: "단어 뽑기",
+            defaultMsg: "화면을 눌러<br>단어를 정하세요!",
+            items: ["서울", "과학", "기술", "컴공", "컴패스", "본인 이름", "학번", "과거", "단종", "조선"]
+        },
+        'roulette-4': {
+            title: "잰말 뽑기",
+            defaultMsg: "화면을 눌러<br>잰말을 정하세요!",
+            items: [
+                "간장공장 공장장은 강 공장장이고 된장공장 공장장은 장 공장장이다",
+                "저기 있는 말뚝이 말 맬 말뚝이냐, 말 못 맬 말뚝이냐?",
+                "경찰청 창살 외철창살, 검찰청 창살 쌍철창살",
+                "네가 그린 기린 그림은 긴 기린 그림이고 내가 그린 기린 그림은 안 긴 기린 그림이다",
+                "고려고 교복은 고급 교복이고 고려고 교복은 고급 원단을 사용했다",
+                "상표 붙인 큰 깡통은 깐 깡통인가 안 깐 깡통인가?",
+                "저기 계신 저 분이 박 법학박사님이시고 여기 계신 이 분이 백 법학박사님이시다",
+                "들의 콩깍지는 깐 콩깍지인가 안 깐 콩깍지인가?",
+                "작년에 온 솥장수는 헌 솥장수이고, 올해 온 솥장수는 새 솥장수이다",
+                "김삿갓 갓은 양갓인가, 남갓인가? 김삿갓 갓은 그냥 갓이다",
+                "멍멍이네 꿀꿀이는 멍멍해도 꿀꿀이네 멍멍이는 꿀꿀하네",
+                "육통 통장 적금 통장은 황색 적금 통장이고 팔통 통장 적금 통장은 청색 적금 통장이다",
+                "중앙청 창살은 쌍창살이고 구청 창살은 외창살이다",
+                "칠월 칠일은 평창인 고조할아버지 칠순 잔칫날",
+                "안 촉촉한 초코칩 나라에 살던 안 촉촉한 초코칩이 촉촉한 초코칩 나라의 촉촉한 초코칩을 보고...",
+                "한국관광공사 곽진광 관광과장",
+                "앞 집 팥죽은 붉은 팥 풋팥죽이고, 뒷집 콩죽은 햇콩단콩 콩죽, 우리집 깨죽은 검은깨 깨죽이다",
+                "작은 토끼 토끼통 옆 큰 토끼 토끼통 큰 토끼 토끼통 옆 작은 토끼 토끼통",
+                "신인 샹송 가수의 신춘 샹송 쇼",
+                "체다치즈를 최고 많이 먹은 최 차장이 체다치즈 먹기 대회 최다 우승자이다",
+                "서울특별시 특허허가과 허가과장 허과장",
+                "우리집 옆집 앞집 뒤창살은 흩겹창살이고, 우리집 뒷집 앞집 옆 창살은 겹흩창살이다",
+                "챠프포프킨과 치스챠코프는 라흐마니노프의 선율이 흐르는 영화를 보았다",
+                "칠월칠일은 평창친구 친정 칠순 잔칫날",
+                "한영양장점 옆 한양양장점, 한양양장점 옆 한영양장점"
+            ]
+        }
+    };
+
+    let currentMode = 'main';
+
+    function showScreen(screenId) {
+        // 모든 화면 숨기기
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        
+        if (screenId === 'main') {
+            document.getElementById('main-screen').classList.add('active');
+            currentMode = 'main';
+        } else {
+            const rouletteScreen = document.getElementById('roulette-screen');
+            const display = document.getElementById('roulette-display');
+            const btn = document.getElementById('draw-btn');
+            
+            // 데이터 세팅
+            display.innerHTML = data[screenId].defaultMsg;
+            btn.innerText = data[screenId].title;
+            
+            rouletteScreen.classList.add('active');
+            currentMode = screenId;
+        }
+    }
+
+    function drawItem() {
+        if (currentMode === 'main') return;
+        
+        const items = data[currentMode].items;
+        const randomItem = items[Math.floor(Math.random() * items.length)];
+        
+        // 결과 표시 (줄바꿈 처리 포함)
+        document.getElementById('roulette-display').innerText = randomItem;
+    }
+
+    function appExit() {
+        if (confirm("앱을 종료하시겠습니까? (메인으로 돌아갑니다)")) {
+            // 웹브라우저는 강제 종료가 어렵기 때문에 메인 화면으로 리셋하거나 알림창을 띄웁니다.
+            showScreen('main');
+        }
+    }
+
+    // 모바일 브라우저 주소창 숨기기 방지용 높이 설정
+    function setHeight() {
+        let vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+    window.addEventListener('resize', setHeight);
+    setHeight();
+
+</script>
+</body>
+</html>
